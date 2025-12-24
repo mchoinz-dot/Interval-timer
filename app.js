@@ -48,6 +48,24 @@
   let remaining = 0;
   let totalRemaining = 0;
   let timer = null;
+  // Keep screen awake (where supported)
+let wakeLock = null;
+
+async function requestWakeLock() {
+  try {
+    if (!("wakeLock" in navigator)) return;
+    wakeLock = await navigator.wakeLock.request("screen");
+  } catch (e) {
+    wakeLock = null;
+  }
+}
+
+async function releaseWakeLock() {
+  try {
+    if (wakeLock) await wakeLock.release();
+  } catch {}
+  wakeLock = null;
+}
   let paused = false;
   let spoken = new Set();
 
@@ -199,12 +217,17 @@
     spoken.clear();
     paused = false;
     startItem();
+    
+    requestWakeLock();
+    
     timer = setInterval(tick, 1000);
   }
 
   function stop() {
     clearInterval(timer);
     timer = null;
+    
+    releaseWakeLock();
   }
 
   /* ---------- Events ---------- */
