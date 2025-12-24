@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Interval Timer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header class="top">
+    <button class="hamburger" id="btnMenu" aria-label="Menu">☰</button>
+    <div class="title">Interval Timer</div>
+    <div class="spacer"></div>
+  </header>
+
+  <main class="wrap">
+    <section class="timer">
+      <div class="bigtime" id="bigTime">33:45</div>
+      <div class="sub" id="subLine">Ready</div>
+
+      <button class="play" id="btnPlay" aria-label="Start/Pause">
+        <span id="playIcon">▶</span>
+      </button>
+    </section>
+
+    <section class="card">
+      <button class="row muted" id="btnLoad">
+        <span class="rowL">📅</span>
+        <span class="rowT">Load Previous Workout</span>
+        <span class="rowR">››</span>
+      </button>
+
+      <button class="row work" id="rowWork">
+        <span class="rowL">▶</span>
+        <span class="rowT">Work</span>
+        <span class="rowR" id="valWork">01:00</span>
+      </button>
+
+      <button class="row rest" id="rowRest">
+        <span class="rowL">⏸</span>
+        <span class="rowT">Rest</span>
+        <span class="rowR" id="valRest">00:00</span>
+      </button>
+
+      <button class="row ex" id="rowEx">
+        <span class="rowL">⚡</span>
+        <span class="rowT">Exercises</span>
+        <span class="rowR" id="valEx">5</span>
+      </button>
+
+      <button class="row rounds" id="rowRounds">
+        <span class="rowL">↻</span>
+        <span class="rowT">Rounds</span>
+        <span class="rowR" id="valRounds">6X</span>
+      </button>
+
+      <button class="row reset" id="rowReset">
+        <span class="rowL">🕒</span>
+        <span class="rowT">Round Reset</span>
+        <span class="rowR" id="valReset">00:45</span>
+      </button>
+    </section>
+
+    <section class="bottomBtns">
+      <button class="small" id="btnResetAll">Reset</button>
+      <button class="small ghost" id="btnMute">Sound: On</button>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
