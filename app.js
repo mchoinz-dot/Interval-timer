@@ -39,10 +39,11 @@
 
   /* ---------- Settings ---------- */
   const READY_SECONDS = 10;
+
+  /* ---------- State ---------- */
   let voiceOn = true;
   let pauseOnBlur = false;
 
-  /* ---------- State ---------- */
   let timeline = [];
   let index = 0;
   let remaining = 0;
@@ -50,16 +51,13 @@
   let timer = null;
   let paused = false;
 
-  // speech
   let spoken = new Set();
-
-  // 30s warning (one-shot per interval item)
   let warned30 = false;
 
-  // Keep screen awake (where supported)
+  // Wake Lock
   let wakeLock = null;
 
-  // Beep audio context (reuse)
+  // Audio context reuse (beep)
   let audioCtx = null;
 
   /* ---------- Helpers ---------- */
@@ -79,14 +77,12 @@
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "en-US";
     u.rate = 1.0;
-    // cancel current queue so it doesn't lag behind
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(u);
   }
 
   function warmUpVoice() {
     try {
-      // helps some browsers “unlock” speech pipeline after user gesture
       const u = new SpeechSynthesisUtterance("");
       window.speechSynthesis.speak(u);
       window.speechSynthesis.cancel();
@@ -96,7 +92,6 @@
   function ensureAudio() {
     try {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      // iOS sometimes needs resume after a user gesture
       audioCtx.resume?.();
     } catch {}
   }
@@ -109,7 +104,6 @@
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
 
-      // strong-ish beep
       osc.type = "sawtooth";
       osc.frequency.value = 880;
       gain.gain.value = 0.6;
@@ -140,6 +134,21 @@
     wakeLock = null;
   }
 
+  function updateRing(ringEl, total, left) {
+    const C = 314;
+    const pct = total > 0 ? (left / total) : 0;
+    ringEl.style.strokeDashoffset = C * (1 - pct);
+  }
+
+  function updateDots(el, current, total) {
+    el.innerHTML = "";
+    for (let i=1; i<=total; i++){
+      const d = document.createElement("div");
+      d.className = "dot" + (i===current ? " on":"");
+      el.appendChild(d);
+    }
+  }
+
   function buildTimeline() {
     timeline = [];
     const work   = +workSecEl.value;
@@ -153,6 +162,7 @@
     for (let r=1; r<=rounds; r++) {
       for (let e=1; e<=ex; e++) {
         timeline.push({ type:"WORK", seconds: work, round:r, exercise:e });
+
         if (rest > 0 && e < ex) {
           timeline.push({ type:"REST", seconds: rest, round:r, exercise:e });
         }
@@ -166,21 +176,6 @@
   function calcTotal() {
     totalRemaining = timeline.reduce((a,b)=>a+b.seconds,0);
     totalTimeEl.textContent = fmt(totalRemaining);
-  }
-
-  function updateDots(el, current, total) {
-    el.innerHTML = "";
-    for (let i=1;i<=total;i++){
-      const d = document.createElement("div");
-      d.className = "dot" + (i===current ? " on":"");
-      el.appendChild(d);
-    }
-  }
-
-  function updateRing(ringEl, total, left) {
-    const C = 314;
-    const pct = total > 0 ? (left / total) : 0;
-    ringEl.style.strokeDashoffset = C * (1 - pct);
   }
 
   function setPhaseUI(item) {
@@ -199,14 +194,9 @@
     ringLabel.textContent  = item.type;
     runTimeEl.textContent  = fmt(remaining);
 
-    if (item.round) {
-      updateDots(dotsRound, item.round, +roundsEl.value);
-    }
-    if (item.exercise) {
-      updateDots(dotsExercise, item.exercise, +exercisesEl.value);
-    }
+    if (item.round) updateDots(dotsRound, item.round, +roundsEl.value);
+    if (item.exercise) updateDots(dotsExercise, item.exercise, +exercisesEl.value);
 
-    // show total remaining during run screens too
     remainingTotalEl.textContent = fmt(totalRemaining);
   }
 
@@ -214,7 +204,6 @@
     const item = timeline[index];
     remaining = item.seconds;
 
-    // reset per-item flags
     spoken.clear();
     warned30 = false;
 
@@ -223,11 +212,7 @@
 
   function finishAll() {
     stop();
-
-    // back to setup screen
     showScreen(screenSetup);
-
-    // show completion message in total area
     remainingTotalEl.textContent = "🎉 COMPLETE!";
     document.body.className = "";
   }
@@ -239,8 +224,9 @@
     totalRemaining--;
     remainingTotalEl.textContent = fmt(Math.max(totalRemaining, 0));
 
-    // 30-second warning once per item (except READY)
     const item = timeline[index];
+
+    // 30-second beep once per item (skip READY)
     if (item && item.type !== "READY" && remaining === 30 && !warned30) {
       warned30 = true;
       play30Beep();
@@ -254,15 +240,13 @@
       if (remaining === 1) speak("One");
     }
 
-    // item ends
+    // move to next item
     if (remaining <= 0) {
       index++;
-
       if (index >= timeline.length) {
         finishAll();
         return;
       }
-
       startItem();
       return;
     }
@@ -278,7 +262,7 @@
   }
 
   function start() {
-    // user gesture moment: unlock speech + audio
+    // unlock speech + audio on user gesture
     warmUpVoice();
     ensureAudio();
 
@@ -289,8 +273,8 @@
     paused = false;
 
     startItem();
-
     requestWakeLock();
+
     timer = setInterval(tick, 1000);
   }
 
@@ -315,7 +299,6 @@
     voiceOn = !voiceOn;
     btnSound.textContent = btnSound2.textContent = voiceOn ? "🔊" : "🔇";
     if (voiceOn) {
-      // warm-up again after toggle
       warmUpVoice();
       ensureAudio();
     }
@@ -326,9 +309,8 @@
   };
 
   document.addEventListener("visibilitychange", () => {
-    // re-acquire wake lock if user comes back (some browsers drop it)
+    // some browsers drop wake lock; reacquire when visible again
     if (!document.hidden && timer) requestWakeLock();
-
     if (pauseOnBlur && document.hidden) paused = true;
   });
 
