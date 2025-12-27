@@ -49,6 +49,8 @@
   let remaining = 0;
   let totalRemaining = 0;
   let timer = null;
+  let isComplete = false;
+let lastTotalText = "";
   let paused = false;
 
   let spoken = new Set();
@@ -174,9 +176,14 @@
   }
 
   function calcTotal() {
-    totalRemaining = timeline.reduce((a,b)=>a+b.seconds,0);
-    totalTimeEl.textContent = fmt(totalRemaining);
-  }
+  if (isComplete) return; // COMPLETE 상태면 덮어쓰지 않음
+
+  totalRemaining = timeline.reduce((a,b)=>a+b.seconds,0);
+  const t = fmt(totalRemaining);
+  totalTimeEl.textContent = t;
+  lastTotalText = t; // ✅ 완료 후 원상복구용
+}
+
 
   function setPhaseUI(item) {
     document.body.className = "";
@@ -211,11 +218,17 @@
   }
 
   function finishAll() {
-    stop();
-    showScreen(screenSetup);
-    totalTimeEl.textContent = "🎉 COMPLETE!";
-    document.body.className = "";
-  }
+  stop();
+
+  isComplete = true;
+  showScreen(screenSetup);
+
+  // ✅ 완료 메시지 표시
+  totalTimeEl.textContent = "🎉 COMPLETE!";
+
+  document.body.className = "";
+}
+
 
   function tick() {
     if (paused) return;
@@ -262,6 +275,7 @@
   }
 
   function start() {
+    isComplete = false;
     // unlock speech + audio on user gesture
     warmUpVoice();
     ensureAudio();
@@ -317,3 +331,18 @@
   /* ---------- Init ---------- */
   showScreen(screenSetup);
 })();
+// ✅ COMPLETE 상태에서 화면 아무데나 터치하면 원상복구
+document.addEventListener("pointerdown", () => {
+  if (!isComplete) return;
+
+  isComplete = false;
+
+  // 원래 총 시간 텍스트로 복귀
+  if (lastTotalText) {
+    totalTimeEl.textContent = lastTotalText;
+  } else {
+    // 혹시 lastTotalText가 비어 있으면 다시 계산
+    buildTimeline();
+    calcTotal();
+  }
+});
