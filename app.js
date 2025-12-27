@@ -44,27 +44,21 @@
   const READY_SECONDS = 10;
 
   /* ---------- State ---------- */
-  let voiceOn = true;
-  let pauseOnBlur = false;
-
   let timeline = [];
   let index = 0;
   let remaining = 0;
   let totalRemaining = 0;
   let timer = null;
 
+  let paused = false;
   let isComplete = false;
   let lastTotalText = "";
-  let paused = false;
 
   let spoken = new Set();
   let warned30 = false;
 
-  // Wake Lock
-  let wakeLock = null;
-
-  // Audio
   let audioCtx = null;
+  let wakeLock = null;
 
   /* ---------- Helpers ---------- */
   const fmt = (s) => {
@@ -80,6 +74,7 @@
     el.classList.add("screen--active");
   }
 
+  /* ---------- Audio ---------- */
   function ensureAudio() {
     try {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -87,7 +82,7 @@
     } catch {}
   }
 
-  function playBeep(freq = 880, duration = 180) {
+  function playBeep(freq = 700, duration = 180) {
     try {
       ensureAudio();
       if (!audioCtx) return;
@@ -103,7 +98,7 @@
       gain.connect(audioCtx.destination);
 
       osc.start();
-      setTimeout(() => { try { osc.stop(); } catch {} }, duration);
+      setTimeout(() => osc.stop(), duration);
     } catch {}
   }
 
@@ -114,23 +109,20 @@
     countOverlayNum.classList.remove("count-3","count-2","count-1");
     countOverlayNum.textContent = String(n);
     countOverlayNum.classList.add(`count-${n}`);
-
     countOverlay.classList.remove("hidden");
   }
 
   function hideOverlay() {
-    if (!countOverlay) return;
-    countOverlay.classList.add("hidden");
+    countOverlay?.classList.add("hidden");
   }
 
   /* ---------- Wake Lock ---------- */
   async function requestWakeLock() {
     try {
-      if (!("wakeLock" in navigator)) return;
-      wakeLock = await navigator.wakeLock.request("screen");
-    } catch {
-      wakeLock = null;
-    }
+      if ("wakeLock" in navigator) {
+        wakeLock = await navigator.wakeLock.request("screen");
+      }
+    } catch {}
   }
 
   async function releaseWakeLock() {
@@ -143,6 +135,7 @@
   /* ---------- Timeline ---------- */
   function buildTimeline() {
     timeline = [];
+
     const work   = +workSecEl.value;
     const rest   = +restSecEl.value;
     const ex     = +exercisesEl.value;
@@ -167,9 +160,8 @@
   function calcTotal() {
     if (isComplete) return;
     totalRemaining = timeline.reduce((a,b)=>a+b.seconds,0);
-    const t = fmt(totalRemaining);
-    totalTimeEl.textContent = t;
-    lastTotalText = t;
+    lastTotalText = fmt(totalRemaining);
+    totalTimeEl.textContent = lastTotalText;
   }
 
   function updateRing(ringEl, total, left) {
@@ -180,7 +172,7 @@
 
   function updateDots(el, current, total) {
     el.innerHTML = "";
-    for (let i=1; i<=total; i++){
+    for (let i=1;i<=total;i++){
       const d = document.createElement("div");
       d.className = "dot" + (i===current ? " on":"");
       el.appendChild(d);
@@ -230,21 +222,21 @@
 
     remaining--;
     totalRemaining--;
-    remainingTotalEl.textContent = fmt(Math.max(totalRemaining, 0));
 
+    remainingTotalEl.textContent = fmt(Math.max(totalRemaining,0));
     const item = timeline[index];
 
-    // 30-second warning
+    // 30s warning
     if (item && item.type !== "READY" && remaining === 30 && !warned30) {
       warned30 = true;
-      playBeep(600, 400);
+      playBeep(500, 400);
     }
 
-    // 3,2,1 beep + overlay (skip RESET)
+    // 3,2,1 overlay + beep (skip RESET)
     if (item && item.type !== "RESET" && remaining <= 3 && remaining > 0 && !spoken.has(remaining)) {
       spoken.add(remaining);
       showOverlayNumber(remaining);
-      playBeep(remaining === 1 ? 520 : 720, 180);
+      playBeep(remaining === 1 ? 520 : 720);
       setTimeout(hideOverlay, 220);
     }
 
@@ -279,12 +271,11 @@
 
     startItem();
     requestWakeLock();
-
     timer = setInterval(tick, 1000);
   }
 
   function stop() {
-    if (timer) clearInterval(timer);
+    clearInterval(timer);
     timer = null;
     releaseWakeLock();
   }
@@ -292,34 +283,25 @@
   /* ---------- Events ---------- */
   btnStart.onclick = start;
 
-  btnPauseReady.onclick = btnPauseRun.onclick = () => {
-    paused = !paused;
-  };
-
-  btnSkipReady.onclick = btnSkipRun.onclick = () => {
-    remaining = 0;
-  };
+  btnPauseReady.onclick = btnPauseRun.onclick = () => paused = !paused;
+  btnSkipReady.onclick  = btnSkipRun.onclick  = () => remaining = 0;
 
   btnSound.onclick = btnSound2.onclick = () => {
-    voiceOn = !voiceOn;
-    btnSound.textContent = btnSound2.textContent = voiceOn ? "🔊" : "🔇";
+    btnSound.textContent = btnSound2.textContent = "🔊";
   };
 
   pauseOnBlurEl.onchange = () => {
-    pauseOnBlur = pauseOnBlurEl.checked;
+    if (pauseOnBlurEl.checked) paused = false;
   };
 
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && timer) requestWakeLock();
-    if (pauseOnBlur && document.hidden) paused = true;
   });
 
-  // COMPLETE 화면 터치 → 원상복구
   document.addEventListener("pointerdown", () => {
     if (!isComplete) return;
     isComplete = false;
-    if (lastTotalText) totalTimeEl.textContent = lastTotalText;
-    else { buildTimeline(); calcTotal(); }
+    totalTimeEl.textContent = lastTotalText;
   });
 
   /* ---------- Init ---------- */
