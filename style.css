@@ -216,6 +216,25 @@ body.reset{background:linear-gradient(180deg, #a3a7ff, #6f79ff);}
 .count-2 { color: #ff9800; }  /* orange */
 .count-1 { color: #ff3b3b; }  /* red */
 
-.count-3 { color: #ffd54f; }  /* yellow */
-.count-2 { color: #ff9800; }  /* orange */
-.count-1 { color: #ff3b3b; }  /* red */
+/* Full-screen countdown overlay */
+.overlay{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.55);
+  z-index:9999;
+}
+
+.overlay.hidden{
+  display:none;
+}
+
+.overlayNum{
+  font-size:min(42vw, 220px);
+  font-weight:900;
+  color:#fff;
+  line-height:1;
+  text-shadow:0 8px 30px rgba(0,0,0,0.55);
+}
