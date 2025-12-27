@@ -45,6 +45,7 @@
   /* ---------- State ---------- */
   let timeline = [];
   let index = 0;
+  let warned30 = false;
   let remaining = 0;
   let totalRemaining = 0;
   let timer = null;
@@ -68,6 +69,29 @@ async function releaseWakeLock() {
 }
   let paused = false;
   let spoken = new Set();
+  // 30-second warning sound
+let audioCtx = null;
+let warned30 = false;
+
+function play30Beep() {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = "sawtooth";   // 강한 소리
+    osc.frequency.value = 880;
+    gain.gain.value = 0.6;
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    setTimeout(() => osc.stop(), 600);
+  } catch {}
+}
 
   /* ---------- Helpers ---------- */
   const fmt = (s) => {
@@ -171,6 +195,11 @@ async function releaseWakeLock() {
     remaining--;
     totalRemaining--;
     remainingTotalEl.textContent = fmt(totalRemaining);
+    // 30초 남았을 때 한 번만 알림음
+if (remaining === 30 && !warned30) {
+  warned30 = true;
+  playBeep();
+}
 
     if (remaining <= 3 && remaining > 0 && !spoken.has(remaining)) {
       spoken.add(remaining);
@@ -183,11 +212,14 @@ async function releaseWakeLock() {
       index++;
       spoken.clear();
       if (index >= timeline.length) {
-        stop();
-        showScreen(screenSetup);
-        document.body.className = "";
-        return;
-      }
+  stop();
+  showScreen(screenSetup);
+
+  remainingTotalEl.textContent = "🎉 COMPLETE!";
+
+  document.body.className = "";
+  return;
+}
       startItem();
       return;
     }
@@ -215,6 +247,7 @@ async function releaseWakeLock() {
     calcTotal();
     index = 0;
     spoken.clear();
+    warned30 = false;
     paused = false;
     startItem();
     
@@ -230,6 +263,22 @@ async function releaseWakeLock() {
     releaseWakeLock();
   }
 
+function playBeep() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = "square";
+  osc.frequency.value = 1000;
+  gain.gain.value = 0.6;
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start();
+  setTimeout(() => osc.stop(), 500);
+}
+  
   /* ---------- Events ---------- */
   btnStart.onclick = () => start();
 
