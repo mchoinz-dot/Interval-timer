@@ -1,165 +1,144 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#111" />
   <title>Interval Timer</title>
-
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
-  <header class="top">
-    <button class="hamburger" id="btnMenu" aria-label="menu">☰</button>
-    <div class="title">Interval Timer</div>
-    <div class="spacer"></div>
-  </header>
+  <!-- ===== Setup Screen ===== -->
+  <section id="screenSetup" class="screen screen--active">
+    <header class="top">
+      <button class="hamburger" id="btnMenu" aria-label="Menu">☰</button>
+      <div class="title">Interval Timer</div>
+      <button class="icon" id="btnSound" aria-label="Sound">🔊</button>
+    </header>
 
-  <main class="wrap">
-    <!-- HOME / SETUP -->
-    <section id="screenSetup" class="screen screen--active">
+    <main class="wrap">
       <div class="bigtime" id="totalTime">00:00</div>
 
-      <button class="play" id="btnStart" aria-label="start">
-        <span class="playIcon">▶</span>
-      </button>
-
-      <div class="card disabled">
-        <div class="row">
-          <div class="label">Load Previous Workout</div>
-          <div class="value">››</div>
-        </div>
-      </div>
-
-      <div class="card work">
+      <div class="panel">
         <div class="row">
           <div class="label">Work</div>
-          <div class="value">
-            <input id="workSec" type="number" min="1" step="1" value="60" />
-            <span class="suffix">sec</span>
+          <div class="input">
+            <input id="workSec" type="number" min="1" value="60" />
+            <span class="unit">sec</span>
           </div>
         </div>
-      </div>
 
-      <div class="card rest">
         <div class="row">
           <div class="label">Rest</div>
-          <div class="value">
-            <input id="restSec" type="number" min="0" step="1" value="0" />
-            <span class="suffix">sec</span>
+          <div class="input">
+            <input id="restSec" type="number" min="0" value="0" />
+            <span class="unit">sec</span>
           </div>
         </div>
-      </div>
 
-      <div class="card">
         <div class="row">
           <div class="label">Exercises</div>
-          <div class="value">
-            <input id="exercises" type="number" min="1" step="1" value="5" />
+          <div class="input">
+            <input id="exercises" type="number" min="1" value="5" />
           </div>
         </div>
-      </div>
 
-      <div class="card">
         <div class="row">
           <div class="label">Rounds</div>
-          <div class="value">
-            <input id="rounds" type="number" min="1" step="1" value="6" />
-            <span class="suffix">x</span>
+          <div class="input">
+            <input id="rounds" type="number" min="1" value="6" />
           </div>
         </div>
-      </div>
 
-      <div class="card reset">
         <div class="row">
           <div class="label">Round Reset</div>
-          <div class="value">
-            <input id="roundResetSec" type="number" min="0" step="1" value="45" />
-            <span class="suffix">sec</span>
+          <div class="input">
+            <input id="roundResetSec" type="number" min="0" value="45" />
+            <span class="unit">sec</span>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- READY -->
-    <section id="screenReady" class="screen">
-      <div class="readyTitle">Get Ready</div>
-
-      <div class="toggleRow">
-        <span>Pause workout if I leave the app</span>
-        <label class="switch">
+        <label class="toggleRow">
           <input id="pauseOnBlur" type="checkbox" />
-          <span class="slider"></span>
+          <span>Pause workout if I leave the app</span>
         </label>
       </div>
 
-      <div class="ringWrap">
-        <svg class="ring" viewBox="0 0 120 120">
-          <circle class="ringBg" cx="60" cy="60" r="50"></circle>
-          <circle class="ringFg" id="readyRing" cx="60" cy="60" r="50"></circle>
-        </svg>
+      <button class="btnPrimary" id="btnStart">Start</button>
+      <div class="hint">Tip: On iPhone, add to Home Screen for best experience.</div>
+    </main>
+  </section>
 
+  <!-- ===== Ready Screen ===== -->
+  <section id="screenReady" class="screen">
+    <header class="top">
+      <button class="hamburger" id="btnMenu2" aria-label="Menu">☰</button>
+      <div class="title">Get Ready</div>
+      <button class="icon" id="btnSound2" aria-label="Sound">🔊</button>
+    </header>
+
+    <main class="center">
+      <div class="ringWrap">
+        <svg class="ringSvg" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ringBg" cx="60" cy="60" r="50"></circle>
+          <circle id="readyRing" class="ringFg" cx="60" cy="60" r="50"></circle>
+        </svg>
         <div class="ringText">
           <div class="ringLabel">GET READY</div>
           <div class="ringTime" id="readyTime">00:10</div>
         </div>
       </div>
 
-      <div class="upNext">
-        <div class="upNextLabel">UP NEXT:</div>
-        <div class="upNextName" id="upNextName">WORK</div>
-      </div>
-
       <div class="controls">
-        <button class="iconBtn" id="btnSound" aria-label="sound">🔊</button>
-        <button class="mainBtn" id="btnPauseReady" aria-label="pause">⏸</button>
-        <button class="iconBtn" id="btnSkipReady" aria-label="skip">⏭</button>
+        <button class="btnCircle" id="btnPauseReady" aria-label="Pause">⏸</button>
+        <button class="btnCircle" id="btnSkipReady" aria-label="Skip">⏭</button>
       </div>
-    </section>
+    </main>
+  </section>
 
-    <!-- WORK/REST -->
-    <section id="screenRun" class="screen">
-      <div class="phaseTitle" id="phaseTitle">Work</div>
+  <!-- ===== Run Screen ===== -->
+  <section id="screenRun" class="screen">
+    <header class="top">
+      <button class="hamburger" id="btnMenu3" aria-label="Menu">☰</button>
+      <div class="title" id="phaseTitle">WORK</div>
+      <div class="right">
+        <div class="remainTotal" id="remainingTotal">00:00</div>
+      </div>
+    </header>
 
-      <div class="progressBars">
-        <div class="barRow">
-          <div class="barLabel">Exercise</div>
-          <div class="dots" id="dotsExercise"></div>
+    <main class="center">
+      <div class="statusDots">
+        <div class="dotGroup">
+          <div class="dotTitle">Exercise</div>
+          <div id="dotsExercise" class="dots"></div>
         </div>
-        <div class="barRow">
-          <div class="barLabel">Round</div>
-          <div class="dots" id="dotsRound"></div>
+        <div class="dotGroup">
+          <div class="dotTitle">Round</div>
+          <div id="dotsRound" class="dots"></div>
         </div>
       </div>
 
       <div class="ringWrap">
-        <svg class="ring" viewBox="0 0 120 120">
+        <svg class="ringSvg" viewBox="0 0 120 120" aria-hidden="true">
           <circle class="ringBg" cx="60" cy="60" r="50"></circle>
-          <circle class="ringFg" id="runRing" cx="60" cy="60" r="50"></circle>
+          <circle id="runRing" class="ringFg" cx="60" cy="60" r="50"></circle>
         </svg>
-
         <div class="ringText">
           <div class="ringLabel" id="ringLabel">WORK</div>
-          <div class="ringTime big" id="runTime">01:00</div>
-          <div class="smallTotal">
-            <span class="clock">⏱</span>
-            <span id="remainingTotal">00:00</span>
-          </div>
+          <div class="ringTime" id="runTime">00:00</div>
         </div>
       </div>
 
-      <div class="bigExercise" id="exerciseName">SHADOW BOXING</div>
-
       <div class="controls">
-        <button class="iconBtn" id="btnSound2" aria-label="sound">🔊</button>
-        <button class="mainBtn" id="btnPauseRun" aria-label="pause">⏸</button>
-        <button class="iconBtn" id="btnSkipRun" aria-label="skip">⏭</button>
+        <button class="btnCircle" id="btnPauseRun" aria-label="Pause">⏸</button>
+        <button class="btnCircle" id="btnSkipRun" aria-label="Skip">⏭</button>
       </div>
-    </section>
-  </main>
+    </main>
+  </section>
 
-  <script src="app.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>
