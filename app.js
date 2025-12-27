@@ -36,6 +36,8 @@
 
   const btnSound  = $("btnSound");
   const btnSound2 = $("btnSound2");
+  const countOverlay = $("countOverlay");
+const countOverlayNum = $("countOverlayNum");
 
   /* ---------- Settings ---------- */
   const READY_SECONDS = 10;
@@ -98,7 +100,25 @@ let lastTotalText = "";
     } catch {}
   }
 
-  function play30Beep() {
+  function play30Beep() 
+  // ===== Countdown overlay helpers =====
+function showOverlayNumber(n) {
+  if (!countOverlay || !countOverlayNum) return;
+
+  // 색상 초기화
+  countOverlayNum.classList.remove("count-3","count-2","count-1");
+
+  countOverlayNum.textContent = String(n);
+  countOverlayNum.classList.add(`count-${n}`);
+
+  countOverlay.classList.remove("hidden");
+}
+
+function hideOverlay() {
+  if (!countOverlay) return;
+  countOverlay.classList.add("hidden");
+}
+
     try {
       ensureAudio();
       if (!audioCtx) return;
@@ -245,13 +265,15 @@ let lastTotalText = "";
       play30Beep();
     }
 
-    // 3,2,1 voice
-    if (remaining <= 3 && remaining > 0 && !spoken.has(remaining)) {
-      spoken.add(remaining);
-      if (remaining === 3) speak("Three");
-      if (remaining === 2) speak("Two");
-      if (remaining === 1) speak("One");
-    }
+   // 3,2,1 beep + overlay (skip RESET)
+if (item && item.type !== "RESET" && remaining <= 3 && remaining > 0 && !spoken.has(remaining)) {
+  spoken.add(remaining);
+
+  showOverlayNumber(remaining);
+  play30Beep();
+
+  setTimeout(() => hideOverlay(), 220);
+}
 
     // move to next item
     if (remaining <= 0) {
@@ -299,6 +321,18 @@ let lastTotalText = "";
   }
 
   /* ---------- Events ---------- */
+document.addEventListener("pointerdown", () => {
+  if (!isComplete) return;
+
+  isComplete = false;
+
+  if (lastTotalText) {
+    totalTimeEl.textContent = lastTotalText;
+  } else {
+    buildTimeline();
+    calcTotal();
+  }
+});
   btnStart.onclick = () => start();
 
   btnPauseReady.onclick = btnPauseRun.onclick = () => {
