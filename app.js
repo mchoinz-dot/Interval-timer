@@ -213,7 +213,7 @@
   function finishAll() {
     stop();
     showScreen(screenSetup);
-    remainingTotalEl.textContent = "🎉 COMPLETE!";
+    totalTimeEl.textContent = "🎉 COMPLETE!";
     document.body.className = "";
   }
 
