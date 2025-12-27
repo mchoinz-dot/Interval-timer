@@ -210,3 +210,8 @@ body.ready{background:linear-gradient(180deg, #ffb347, #ff8b45);}
 body.work{background:linear-gradient(180deg, #38d7a3, #1fb985);}
 body.rest{background:linear-gradient(180deg, #ff6b7a, #ff3b6a);}
 body.reset{background:linear-gradient(180deg, #a3a7ff, #6f79ff);}
+
+/* Countdown colors for 3-2-1 */
+.count-3 { color: #ffd54f; }  /* yellow */
+.count-2 { color: #ff9800; }  /* orange */
+.count-1 { color: #ff3b3b; }  /* red */
